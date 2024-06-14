@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mapa de recorrido</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <style>
+        #map-container {
+            height: 100vh; /* Establecemos la altura del contenedor para que ocupe toda la altura visible del navegador */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #mi_mapa {
+            height: 600px; /* Ajusta la altura del mapa según tu preferencia */
+            width: 800px; /* Ajusta el ancho del mapa según tu preferencia */
+        }
+        body {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+<div id="map-container">
+    <div id="mi_mapa"></div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+    let map = L.map('mi_mapa').setView([-17.398571, -66.150567], 18);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Agregar marcadores para cada punto de recojo de basura
+    let puntos = [
+        [-17.398537, -66.151138],
+        [-17.398557, -66.149992]
+    ];
+
+    for (let i = 0; i < puntos.length; i++) {
+        L.marker(puntos[i]).addTo(map);
+    }
+
+    // Generar la ruta utilizando OSRM
+    let url = https://router.project-osrm.org/route/v1/driving/${puntos.map(p => p.reverse().join(',')).join(';')}?overview=full&geometries=geojson;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            let ruta = L.geoJSON(data.routes[0].geometry, {
+                style: {color: 'blue', weight: 5, opacity: 0.5}
+            }).addTo(map);
+            map.fitBounds(ruta.getBounds());
+        })
+        .catch(error => {
+            console.error('Error al obtener la ruta:', error);
+        });
+</script>
+</body>
+</html>

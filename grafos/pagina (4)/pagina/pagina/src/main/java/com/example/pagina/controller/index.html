@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mapa de recorrido</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <style>
+        #map-container {
+            height: 100vh; /* Establecemos la altura del contenedor para que ocupe toda la altura visible del navegador */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #mi_mapa {
+            height: 600px; /* Ajusta la altura del mapa según tu preferencia */
+            width: 800px; /* Ajusta el ancho del mapa según tu preferencia */
+        }
+        body {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+<div id="map-container">
+    <div id="mi_mapa"></div>
+    <button id="add-point-btn">Agregar punto de recojo de basura</button>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+    let map = L.map('mi_mapa').setView([-17.39858, -66.15114], 12);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    let autoIcon = L.icon({
+        iconUrl: 'auto.png', // Reemplaza con la ruta de la imagen del modelo de auto
+        iconSize: [35, 35], // Tamaño del icono
+        iconAnchor: [20, 20] // Ancla del icono
+    });
+
+    let coordenadas = [
+        [-17.39858, -66.15114],
+        [-17.39859, -66.14999],
+        [-17.39753, -66.14865],
+        [-17.39641, -66.15016],
+        [-17.39679, -66.15237]
+    ];
+
+    for (let i = 0; i < coordenadas.length; i++) {
+        L.marker(coordenadas[i], { icon: autoIcon }).addTo(map).bindPopup("Punto de recojo de basura " + (i + 1)).openPopup();
+    }
+
+    document.getElementById('add-point-btn').addEventListener('click', function() {
+        let newPointCoords = prompt("Ingrese las coordenadas del nuevo punto de recojo de basura (latitud, longitud):");
+        if (newPointCoords) {
+            let coordsArray = newPointCoords.split(',');
+            let newCoord = [parseFloat(coordsArray[0]), parseFloat(coordsArray[1])];
+            L.marker(newCoord, { icon: autoIcon }).addTo(map).bindPopup("Punto de recojo de basura " + (coordenadas.length + 1)).openPopup();
+        }
+    });
+</script>
+</body>
+</html>
