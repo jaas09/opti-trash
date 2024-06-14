@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mapa Interactivo</title>
+    <link rel="icon" href="icono.png" type="image/png">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        #map-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        #mi_mapa {
+            height: 600px;
+            width: 100%;
+            max-width: 800px;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        #button-container {
+            margin: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #coordinates-table {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 800px;
+        }
+        #coordinates-table th, #coordinates-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        #coordinates-table th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+<div id="map-container" class="container">
+    <div id="button-container" class="text-center">
+        <button id="optimal-route-button" class="btn btn-primary mb-3">Camino más óptimo</button>
+    </div>
+    <div id="mi_mapa" class="mb-3"></div>
+    <table id="coordinates-table" class="table table-striped">
+        <thead>
+        <tr>
+            <th>Número</th>
+            <th>Latitud</th>
+            <th>Longitud</th>
+            <th>Detalles</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Filas de coordenadas serán agregadas aquí -->
+        </tbody>
+    </table>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+    let map = L.map('mi_mapa').setView([-17.39858, -66.15114], 12);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Agregamos puntos de recojo de basura
+    const puntosBasura = [
+        { lat: -17.39858, lng: -66.15114, detalle: "Punto de basura 1" },
+        { lat: -17.398941, lng: -66.153152, detalle: "Punto de basura 2" },
+        { lat: -17.398628, lng: -66.152208, detalle: "Punto de basura 3" },
+        { lat: -17.397932, lng: -66.152235, detalle: "Punto de basura 4" },
+        { lat: -17.396872, lng: -66.152428, detalle: "Punto de basura 5" },
+        { lat: -17.39784, lng: -66.151173, detalle: "Punto de basura 6" },
+        { lat: -17.397692, lng: -66.150051, detalle: "Punto de basura 7" }
+    ];
+
+    puntosBasura.forEach(punto => {
+        L.marker([punto.lat, punto.lng]).addTo(map).bindPopup(punto.detalle).openPopup();
+    });
+
+    async function getOptimalRoute() {
+        try {
+            let response = await fetch('/ruta-optima');
+            if (response.ok) {
+                return await response.json();
+            } else {
+                console.error('Error al obtener la ruta óptima:', response.statusText);
+                return [];
+            }
+        } catch (error) {
+            console.error('Error al obtener la ruta óptima:', error);
+            return [];
+        }
+    }
+
+    function updateTable(optimalRoute) {
+        let tbody = document.querySelector("#coordinates-table tbody");
+        tbody.innerHTML = ""; // Limpiar tabla
+        optimalRoute.forEach((coord, index) => {
+            let row = document.createElement("tr");
+            let numCell = document.createElement("td");
+            numCell.textContent = index + 1;
+            let latCell = document.createElement("td");
+            latCell.textContent = coord[0];
+            let lngCell = document.createElement("td");
+            lngCell.textContent = coord[1];
+            let detalleCell = document.createElement("td");
+            detalleCell.textContent = "Detalle del punto " + (index + 1); // Placeholder for actual details
+            row.appendChild(numCell);
+            row.appendChild(latCell);
+            row.appendChild(lngCell);
+            row.appendChild(detalleCell);
+            tbody.appendChild(row);
+        });
+    }
+
+    document.getElementById('optimal-route-button').addEventListener('click', async function() {
+        let optimalRoute = await getOptimalRoute();
+        if (optimalRoute.length > 1) {
+            let latlngs = optimalRoute.map(coord => L.latLng(coord[0], coord[1]));
+            L.polyline(latlngs, { color: 'red' }).addTo(map);
+            updateTable(optimalRoute);
+        } else {
+            alert("El camino óptimo debe contener al menos dos puntos.");
+        }
+    });
+</script>
+</body>
+</html>
